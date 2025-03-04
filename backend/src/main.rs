@@ -6,8 +6,10 @@ use tokio::net::TcpListener;
 
 mod app;
 mod config;
+mod database;
 mod middleware;
 mod routes;
+mod state;
 
 #[tokio::main]
 async fn main() {
@@ -22,7 +24,7 @@ async fn main() {
         .await
         .expect("Failed to bind port");
 
-    let app = create_app();
+    let app = create_app().await;
 
     println!("Server listening on port {}", port);
 
