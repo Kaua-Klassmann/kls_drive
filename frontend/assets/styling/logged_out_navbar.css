@@ -1,0 +1,14 @@
+.navbar {
+    background-color: var(--bg-main);
+    height: 7dvh;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 2rem;
+    padding-right: 1rem;
+
+    & .link {
+        color: var(--highlight);
+        text-decoration: none;
+    }
+}
