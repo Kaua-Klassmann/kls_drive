@@ -10,7 +10,7 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
-    config::{app::get_app_config, redis::get_redis_config},
+    config::{app::get_app_config, email::get_email_config, redis::get_redis_config},
     state::AppState,
 };
 
@@ -90,6 +90,7 @@ pub async fn register_user(
     let frontend_url = get_app_config().frontend_url.clone();
 
     let email = Message::builder()
+        .from(format!("<{}>", get_email_config().email).parse().unwrap())
         .to(format!("<{}>", payload.email.clone()).parse().unwrap())
         .subject("Activate your account")
         .body(format!("{}/activate/{}", frontend_url, activation))
