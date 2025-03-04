@@ -1,6 +1,5 @@
-use std::env;
-
 use app::create_app;
+use config::app::get_app_config;
 use dotenvy::dotenv;
 use tokio::net::TcpListener;
 
@@ -16,10 +15,7 @@ mod state;
 async fn main() {
     dotenv().ok();
 
-    let port = env::var("APP_PORT")
-        .ok()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(3000);
+    let port = get_app_config().port;
 
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await

@@ -2,13 +2,17 @@ use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
 use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use bb8_redis::redis::{AsyncCommands, RedisError};
 use entity::user;
+use lettre::{AsyncTransport, Message};
 use sea_orm::{ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
 use serde::Deserialize;
 use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::{config::redis::get_redis_config, state::AppState};
+use crate::{
+    config::{app::get_app_config, redis::get_redis_config},
+    state::AppState,
+};
 
 #[derive(Deserialize, Validate)]
 pub struct RegisterUserPayload {
@@ -33,6 +37,7 @@ pub async fn register_user(
 
     let db = &state.db_conn;
     let redis = &mut state.redis_conn.get().await.unwrap();
+    let email_mailer = &state.email_mailer;
     let argon2 = &state.argon2;
 
     let cached_user: Result<String, RedisError> =
@@ -81,6 +86,16 @@ pub async fn register_user(
             Json(json!({"error": "Failed to create user"})),
         );
     }
+
+    let frontend_url = get_app_config().frontend_url.clone();
+
+    let email = Message::builder()
+        .to(format!("<{}>", payload.email.clone()).parse().unwrap())
+        .subject("Activate your account")
+        .body(format!("{}/activate/{}", frontend_url, activation))
+        .unwrap();
+
+    email_mailer.send(email).await.unwrap();
 
     let user_json = serde_json::to_string(&json!({
         "password": password_hash,
