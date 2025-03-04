@@ -1,0 +1,32 @@
+#login_view {
+    min-height: 93dvh;
+    background-color: var(--bg-secondary);
+    display: grid;
+    place-items: center;
+}
+
+#login_form {
+    background-color: var(--bg-main);
+    width: 20rem;
+    border: 1px solid var(--highlight);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+
+    & h1 {
+        color: var(--text-main);
+        text-align: center;
+    }
+
+    & input, button {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--highlight);
+        padding: 0.5rem;
+        color: var(--text-main);
+    }
+
+    & button {
+        cursor: pointer;
+    }
+}

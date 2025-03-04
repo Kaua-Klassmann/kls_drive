@@ -7,7 +7,7 @@ pub fn CreateAccount() -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: CREATE_ACCOUNT_CSS }
         div { id: "create_account_view",
-            form {
+            form { id: "create_account_form",
                 h1 { "Create Account" }
                 input { r#type: "email", placeholder: "Email", required: true }
                 input {
