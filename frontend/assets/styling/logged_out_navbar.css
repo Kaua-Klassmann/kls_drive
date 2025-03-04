@@ -1,5 +1,6 @@
 .navbar {
     background-color: var(--bg-main);
+    border-bottom: 1px solid var(--highlight);
     height: 7dvh;
     display: flex;
     justify-content: end;
