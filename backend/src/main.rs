@@ -5,6 +5,8 @@ use dotenvy::dotenv;
 use tokio::net::TcpListener;
 
 mod app;
+mod config;
+mod middleware;
 mod routes;
 
 #[tokio::main]
