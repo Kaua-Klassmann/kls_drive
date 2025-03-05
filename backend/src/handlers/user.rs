@@ -53,10 +53,18 @@ pub async fn register_user(
     let user_res = user::Entity::find()
         .filter(user::Column::Email.eq(payload.email.clone()))
         .one(db)
-        .await
-        .unwrap();
+        .await;
 
-    if user_res.is_some() {
+    if user_res.is_err() {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({
+                "error": "Failed on server"
+            })),
+        );
+    }
+
+    if user_res.unwrap().is_some() {
         return (
             StatusCode::BAD_REQUEST,
             Json(json!({"error": "User already exists"})),
