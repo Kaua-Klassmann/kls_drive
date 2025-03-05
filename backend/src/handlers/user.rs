@@ -114,10 +114,28 @@ pub async fn register_user(
 
     email_mailer.send(email).await.unwrap();
 
+    let user_id = user_res.unwrap().last_insert_id;
+
     let _: String = redis
         .set_ex(
             format!("activate_user:{}", activation),
-            user_res.unwrap().last_insert_id,
+            user_id,
+            get_redis_config().ttl,
+        )
+        .await
+        .unwrap();
+
+    let json_data = serde_json::to_string(&json!({
+        "id": user_id,
+        "password": payload.password.clone(),
+        "actived": false
+    }))
+    .unwrap();
+
+    let _: String = redis
+        .set_ex(
+            format!("user:{}", payload.email),
+            json_data,
             get_redis_config().ttl,
         )
         .await
@@ -200,6 +218,29 @@ pub async fn activate_user(
                 "error": "Failed to update user"
             })),
         );
+    }
+
+    let user_data_result = user::Entity::find()
+        .filter(user::Column::Id.eq(user_id))
+        .one(db)
+        .await;
+
+    if let Ok(Some(user_data)) = user_data_result {
+        let json_data = serde_json::to_string(&json!({
+            "id": user_id,
+            "password": user_data.password,
+            "actived": true
+        }))
+        .unwrap();
+
+        let _: String = redis
+            .set_ex(
+                format!("user:{}", user_data.email),
+                json_data,
+                get_redis_config().ttl,
+            )
+            .await
+            .unwrap();
     }
 
     (StatusCode::OK, Json(json!({})))
