@@ -7,7 +7,7 @@ use serde::Deserialize;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::config::redis;
+use crate::config;
 
 #[derive(Deserialize)]
 pub struct User {
@@ -34,7 +34,7 @@ pub async fn set_user(
         .set_ex(
             format!("user:{}", email),
             json_data,
-            redis::get_redis_config().ttl,
+            config::redis::get_redis_config().ttl,
         )
         .await
 }
@@ -66,7 +66,7 @@ pub async fn set_activate_user(
         .set_ex(
             format!("activate_user:{}", activation_code),
             user_id,
-            redis::get_redis_config().ttl,
+            config::redis::get_redis_config().ttl,
         )
         .await
 }

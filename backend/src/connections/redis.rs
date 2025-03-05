@@ -4,14 +4,14 @@ use bb8::Pool;
 use bb8_redis::{RedisConnectionManager, redis::ConnectionInfo};
 use tokio::sync::OnceCell;
 
-use crate::config::redis::get_redis_config;
+use crate::config;
 
 static REDIS: OnceCell<Pool<RedisConnectionManager>> = OnceCell::const_new();
 
 pub async fn get_redis_connection() -> Pool<RedisConnectionManager> {
     REDIS
         .get_or_init(|| async {
-            let redis_config = get_redis_config();
+            let redis_config = config::redis::get_redis_config();
 
             let connection_info = ConnectionInfo::from_str(&redis_config.url).unwrap();
 

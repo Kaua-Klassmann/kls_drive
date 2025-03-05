@@ -14,7 +14,7 @@ use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::{config::app::get_app_config, services, state::AppState};
+use crate::{config, services, state::AppState};
 
 #[derive(Deserialize, Validate)]
 pub struct RegisterUserPayload {
@@ -95,7 +95,7 @@ pub async fn register_user(
         );
     }
 
-    let frontend_url = get_app_config().frontend_url.clone();
+    let frontend_url = config::app::get_app_config().frontend_url.clone();
 
     let _ = services::email::send_email(
         payload.email.clone(),
