@@ -12,7 +12,7 @@ pub struct Model {
     pub email: String,
     pub password: String,
     #[sea_orm(column_type = "Binary(16)", nullable, unique)]
-    pub activation: Uuid,
+    pub activation: Option<Uuid>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
