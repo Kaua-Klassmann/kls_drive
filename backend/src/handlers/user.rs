@@ -6,7 +6,6 @@ use axum::{
     response::IntoResponse,
 };
 use entity::user;
-use lettre::{AsyncTransport, Message};
 use sea_orm::{
     ActiveValue::Set, ColumnTrait, EntityTrait, FromQueryResult, QueryFilter, QuerySelect,
 };
@@ -15,11 +14,7 @@ use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::{
-    config::{app::get_app_config, email::get_email_config},
-    services,
-    state::AppState,
-};
+use crate::{config::app::get_app_config, services, state::AppState};
 
 #[derive(Deserialize, Validate)]
 pub struct RegisterUserPayload {
@@ -44,7 +39,6 @@ pub async fn register_user(
 
     let db = &state.db_conn;
     let redis = &mut state.redis_conn.get().await.unwrap();
-    let email_mailer = &state.email_mailer;
     let argon2 = &state.argon2;
 
     let cached_user = services::redis::get_user(redis, payload.email.clone()).await;
@@ -103,14 +97,11 @@ pub async fn register_user(
 
     let frontend_url = get_app_config().frontend_url.clone();
 
-    let email = Message::builder()
-        .from(format!("<{}>", get_email_config().email).parse().unwrap())
-        .to(format!("<{}>", payload.email.clone()).parse().unwrap())
-        .subject("Activate your account")
-        .body(format!("{}/activate/{}", frontend_url, activation))
-        .unwrap();
-
-    email_mailer.send(email).await.unwrap();
+    let _ = services::email::send_email(
+        payload.email.clone(),
+        "Activate your account".to_string(),
+        format!("{}/activate/{}", frontend_url, activation),
+    );
 
     let user_id = user_res.unwrap().last_insert_id;
 
