@@ -5,7 +5,6 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use bb8_redis::redis::{AsyncCommands, RedisError};
 use entity::user;
 use lettre::{AsyncTransport, Message};
 use sea_orm::{
@@ -17,7 +16,8 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
-    config::{app::get_app_config, email::get_email_config, redis::get_redis_config},
+    config::{app::get_app_config, email::get_email_config},
+    services,
     state::AppState,
 };
 
@@ -47,9 +47,7 @@ pub async fn register_user(
     let email_mailer = &state.email_mailer;
     let argon2 = &state.argon2;
 
-    let cached_user: Result<String, RedisError> = redis
-        .get(format!("user_exists:{}", payload.email.clone()))
-        .await;
+    let cached_user = services::redis::get_user(redis, payload.email.clone()).await;
 
     if cached_user.is_ok() {
         return (
@@ -116,30 +114,9 @@ pub async fn register_user(
 
     let user_id = user_res.unwrap().last_insert_id;
 
-    let _: String = redis
-        .set_ex(
-            format!("activate_user:{}", activation),
-            user_id,
-            get_redis_config().ttl,
-        )
-        .await
-        .unwrap();
+    let _ = services::redis::set_activate_user(redis, activation, user_id).await;
 
-    let json_data = serde_json::to_string(&json!({
-        "id": user_id,
-        "password": payload.password.clone(),
-        "actived": false
-    }))
-    .unwrap();
-
-    let _: String = redis
-        .set_ex(
-            format!("user:{}", payload.email),
-            json_data,
-            get_redis_config().ttl,
-        )
-        .await
-        .unwrap();
+    let _ = services::redis::set_user(redis, user_id, payload.email, password_hash, false).await;
 
     (StatusCode::CREATED, Json(json!({})))
 }
@@ -158,16 +135,12 @@ pub async fn activate_user(
 
     let user_id: u32;
 
-    let cached_user: Result<String, RedisError> =
-        redis.get(format!("activate_user:{}", activate_code)).await;
+    let cached_user = services::redis::get_activate_user(redis, activate_code).await;
 
     if cached_user.is_ok() {
-        user_id = cached_user.unwrap().parse().unwrap();
+        user_id = cached_user.unwrap().user_id;
 
-        let _: String = redis
-            .del(format!("activate_user:{}", activate_code))
-            .await
-            .unwrap();
+        let _ = services::redis::del_activate_user(redis, activate_code).await;
     } else {
         let user_result_db = user::Entity::find()
             .select_only()
@@ -226,19 +199,7 @@ pub async fn activate_user(
         .await;
 
     if let Ok(Some(user_data)) = user_data_result {
-        let json_data = serde_json::to_string(&json!({
-            "id": user_id,
-            "password": user_data.password,
-            "actived": true
-        }))
-        .unwrap();
-
-        let _: String = redis
-            .set_ex(
-                format!("user:{}", user_data.email),
-                json_data,
-                get_redis_config().ttl,
-            )
+        services::redis::set_user(redis, user_id, user_data.email, user_data.password, true)
             .await
             .unwrap();
     }
