@@ -1,5 +1,10 @@
 use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
-use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use axum::{
+    Json,
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use bb8_redis::redis::{AsyncCommands, RedisError};
 use entity::user;
 use lettre::{AsyncTransport, Message};
@@ -40,8 +45,9 @@ pub async fn register_user(
     let email_mailer = &state.email_mailer;
     let argon2 = &state.argon2;
 
-    let cached_user: Result<String, RedisError> =
-        redis.get(format!("user:{}", payload.email.clone())).await;
+    let cached_user: Result<String, RedisError> = redis
+        .get(format!("user_exists:{}", payload.email.clone()))
+        .await;
 
     if cached_user.is_ok() {
         return (
@@ -82,7 +88,7 @@ pub async fn register_user(
     let user = user::ActiveModel {
         email: Set(payload.email.clone()),
         password: Set(password_hash.clone()),
-        activation: Set(activation),
+        activation: Set(Some(activation)),
         ..Default::default()
     };
 
@@ -106,16 +112,19 @@ pub async fn register_user(
 
     email_mailer.send(email).await.unwrap();
 
-    let user_json = serde_json::to_string(&json!({
-        "password": password_hash,
-        "activation": activation
-    }))
-    .unwrap();
+    let _: String = redis
+        .set_ex(
+            format!("user_exists:{}", payload.email),
+            "".to_string(),
+            get_redis_config().ttl,
+        )
+        .await
+        .unwrap();
 
     let _: String = redis
         .set_ex(
-            format!("user:{}", payload.email),
-            user_json,
+            format!("activate_user:{}", activation),
+            payload.email,
             get_redis_config().ttl,
         )
         .await
