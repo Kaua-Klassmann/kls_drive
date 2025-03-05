@@ -8,7 +8,9 @@ use axum::{
 use bb8_redis::redis::{AsyncCommands, RedisError};
 use entity::user;
 use lettre::{AsyncTransport, Message};
-use sea_orm::{ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{
+    ActiveValue::Set, ColumnTrait, EntityTrait, FromQueryResult, QueryFilter, QuerySelect,
+};
 use serde::Deserialize;
 use serde_json::json;
 use uuid::Uuid;
@@ -114,21 +116,91 @@ pub async fn register_user(
 
     let _: String = redis
         .set_ex(
-            format!("user_exists:{}", payload.email),
-            "".to_string(),
-            get_redis_config().ttl,
-        )
-        .await
-        .unwrap();
-
-    let _: String = redis
-        .set_ex(
             format!("activate_user:{}", activation),
-            payload.email,
+            user_res.unwrap().last_insert_id,
             get_redis_config().ttl,
         )
         .await
         .unwrap();
 
     (StatusCode::CREATED, Json(json!({})))
+}
+
+#[derive(FromQueryResult)]
+struct UserWithId {
+    id: u32,
+}
+
+pub async fn activate_user(
+    State(state): State<AppState>,
+    Path(activate_code): Path<Uuid>,
+) -> impl IntoResponse {
+    let db = &state.db_conn;
+    let redis = &mut state.redis_conn.get().await.unwrap();
+
+    let user_id: u32;
+
+    let cached_user: Result<String, RedisError> =
+        redis.get(format!("activate_user:{}", activate_code)).await;
+
+    if cached_user.is_ok() {
+        user_id = cached_user.unwrap().parse().unwrap();
+
+        let _: String = redis
+            .del(format!("activate_user:{}", activate_code))
+            .await
+            .unwrap();
+    } else {
+        let user_result_db = user::Entity::find()
+            .select_only()
+            .columns([user::Column::Id])
+            .filter(user::Column::Activation.eq(activate_code))
+            .into_model::<UserWithId>()
+            .one(db)
+            .await;
+
+        if user_result_db.is_err() {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "Failed to find user"
+                })),
+            );
+        }
+
+        let user_result = user_result_db.unwrap();
+
+        if user_result.is_none() {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "User not found"
+                })),
+            );
+        }
+
+        user_id = user_result.unwrap().id;
+    }
+
+    let user_model = user::ActiveModel {
+        id: Set(user_id),
+        activation: Set(None),
+        ..Default::default()
+    };
+
+    let update_user_result = user::Entity::update(user_model)
+        .filter(user::Column::Id.eq(user_id))
+        .exec(db)
+        .await;
+
+    if update_user_result.is_err() {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({
+                "error": "Failed to update user"
+            })),
+        );
+    }
+
+    (StatusCode::OK, Json(json!({})))
 }
