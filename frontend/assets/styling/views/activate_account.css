@@ -1,6 +1,13 @@
 #activate_view {
     min-height: 93dvh;
     background-color: var(--bg-secondary);
+
+    & #div_message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
 }
 
 #activate_box {

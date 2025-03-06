@@ -1,7 +1,9 @@
+#![allow(non_snake_case)]
+
 use dioxus::prelude::*;
 
 use components::LoggedOutNavbar;
-use views::{CreateAccount, Login};
+use views::{ActivateAccount, CreateAccount, Login};
 
 mod components;
 mod views;
@@ -13,7 +15,9 @@ pub enum Route {
         #[route("/")]
         Login {},
         #[route("/account/register")]
-        CreateAccount {}
+        CreateAccount {},
+        #[route("/activate/:activate_code")]
+        ActivateAccount { activate_code: String }
 }
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
