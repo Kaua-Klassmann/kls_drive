@@ -16,5 +16,5 @@ pub async fn send_email(to: String, subject: String, body: String) -> Result<Res
         .body(body)
         .unwrap();
 
-    Ok(mailer_send.send(email).await.unwrap())
+    mailer_send.send(email).await
 }
