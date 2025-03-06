@@ -8,7 +8,7 @@ use crate::config;
 
 static REDIS: OnceCell<Pool<RedisConnectionManager>> = OnceCell::const_new();
 
-pub async fn get_redis_connection() -> Pool<RedisConnectionManager> {
+pub async fn get_redis_connection() -> &'static Pool<RedisConnectionManager> {
     REDIS
         .get_or_init(|| async {
             let redis_config = config::redis::get_redis_config();
@@ -27,5 +27,4 @@ pub async fn get_redis_connection() -> Pool<RedisConnectionManager> {
             pool
         })
         .await
-        .clone()
 }

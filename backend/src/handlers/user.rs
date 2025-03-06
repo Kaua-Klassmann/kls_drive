@@ -37,7 +37,7 @@ pub async fn register_user(
         );
     }
 
-    let db = &state.db_conn;
+    let db = state.db_conn;
     let redis = &mut state.redis_conn.get().await.unwrap();
     let argon2 = &state.argon2;
 
@@ -121,7 +121,7 @@ pub async fn activate_user(
     State(state): State<AppState>,
     Path(activate_code): Path<Uuid>,
 ) -> impl IntoResponse {
-    let db = &state.db_conn;
+    let db = state.db_conn;
     let redis = &mut state.redis_conn.get().await.unwrap();
 
     let user_id: u32;

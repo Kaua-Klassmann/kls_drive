@@ -7,7 +7,7 @@ use sea_orm::DatabaseConnection;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db_conn: DatabaseConnection,
-    pub redis_conn: Arc<Pool<RedisConnectionManager>>,
+    pub db_conn: &'static DatabaseConnection,
+    pub redis_conn: Arc<&'static Pool<RedisConnectionManager>>,
     pub argon2: Arc<Argon2<'static>>,
 }
