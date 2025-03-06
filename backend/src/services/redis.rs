@@ -3,17 +3,16 @@ use bb8_redis::{
     RedisConnectionManager,
     redis::{AsyncCommands, RedisError},
 };
-use serde::Deserialize;
-use serde_json::json;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::config;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct User {
     pub user_id: u32,
     pub password: String,
-    pub actived: bool,
+    pub activated: bool,
 }
 
 pub async fn set_user(
@@ -21,13 +20,13 @@ pub async fn set_user(
     user_id: u32,
     email: String,
     password: String,
-    actived: bool,
+    activated: bool,
 ) -> Result<(), RedisError> {
-    let json_data = serde_json::to_string(&json!({
-        "user_id": user_id,
-        "password": password,
-        "actived": actived
-    }))
+    let json_data = serde_json::to_string(&User {
+        user_id,
+        password,
+        activated,
+    })
     .unwrap();
 
     redis
@@ -52,7 +51,7 @@ pub async fn get_user(
     Ok(serde_json::from_str(resp.unwrap().as_str()).unwrap())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct ActivateUser {
     pub user_id: u32,
 }
@@ -62,10 +61,12 @@ pub async fn set_activate_user(
     activation_code: Uuid,
     user_id: u32,
 ) -> Result<(), RedisError> {
+    let json_data = serde_json::to_string(&ActivateUser { user_id }).unwrap();
+
     redis
         .set_ex(
             format!("activate_user:{}", activation_code),
-            user_id,
+            json_data,
             config::redis::get_redis_config().ttl,
         )
         .await
