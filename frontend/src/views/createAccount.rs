@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use serde::Serialize;
 
-use crate::components::MessageWithButtonLink;
+use crate::components::{Loading, MessageWithButtonLink};
 
 const CREATE_ACCOUNT_CSS: Asset = asset!("/assets/styling/views/create_account.css");
 
@@ -112,7 +112,7 @@ pub fn CreateAccount() -> Element {
             MessageWithButtonLink { message: "Email sent to your email", url: "/".to_string() }
         }
         if loading.read().to_owned() {
-            div { id: "loading" }
+            Loading {}
         }
     }
 }

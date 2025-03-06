@@ -43,24 +43,3 @@
 .disabled {
     cursor: not-allowed;
 }
-
-#loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    border: 5px solid var(--highlight);
-    border-bottom-color: transparent;
-    border-radius: 50%;
-    height: 2rem;
-    width: 2rem;
-    animation: rotation 1s linear infinite;
-}
-
-@keyframes rotation {
-    from {
-        transform: translate(-50%, -50%) rotate(0deg);
-    }
-    to {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
-}
