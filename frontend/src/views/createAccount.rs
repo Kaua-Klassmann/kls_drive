@@ -107,12 +107,12 @@ pub fn CreateAccount() -> Element {
                     }
                 }
             }
-        }
-        if success.read().to_owned() {
-            MessageWithButtonLink { message: "Email sent to your email", url: "/".to_string() }
-        }
-        if loading.read().to_owned() {
-            Loading {}
+            if success.read().to_owned() {
+                MessageWithButtonLink { message: "Email sent to your email", url: "/".to_string() }
+            }
+            if loading.read().to_owned() {
+                div { id: "div_loading", Loading {} }
+            }
         }
     }
 }
