@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 use serde::Serialize;
 
-const CREATE_ACCOUNT_CSS: Asset = asset!("/assets/styling/create_account.css");
+use crate::components::MessageWithButtonLink;
+
+const CREATE_ACCOUNT_CSS: Asset = asset!("/assets/styling/views/create_account.css");
 
 #[derive(Serialize)]
 struct RegisterUserPayload {
@@ -107,12 +109,7 @@ pub fn CreateAccount() -> Element {
             }
         }
         if success.read().to_owned() {
-            div { id: "success_message",
-                h1 { "Email sent to {email.read()}" }
-                button {
-                    Link { to: "/", class: "link", "OK" }
-                }
-            }
+            MessageWithButtonLink { message: "Email sent to {email}", url: "/".to_string() }
         }
         if loading.read().to_owned() {
             div { id: "loading" }

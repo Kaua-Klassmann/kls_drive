@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 
 use crate::Route;
 
-const LOGGED_OUT_NAVBAR_CSS: Asset = asset!("/assets/styling/logged_out_navbar.css");
+const LOGGED_OUT_NAVBAR_CSS: Asset = asset!("/assets/styling/components/logged_out_navbar.css");
 
 #[component]
 pub fn LoggedOutNavbar() -> Element {

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-const LOGIN_CSS: Asset = asset!("/assets/styling/login.css");
+const LOGIN_CSS: Asset = asset!("/assets/styling/views/login.css");
 
 #[component]
 pub fn Login() -> Element {
