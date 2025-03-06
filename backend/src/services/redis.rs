@@ -11,7 +11,7 @@ use crate::config;
 
 #[derive(Deserialize)]
 pub struct User {
-    pub id: u32,
+    pub user_id: u32,
     pub password: String,
     pub actived: bool,
 }
