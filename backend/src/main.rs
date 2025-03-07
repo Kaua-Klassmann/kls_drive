@@ -6,6 +6,7 @@ mod app;
 mod config;
 mod connections;
 mod handlers;
+mod jwt;
 mod middleware;
 mod routes;
 mod services;
