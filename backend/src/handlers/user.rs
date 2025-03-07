@@ -38,8 +38,19 @@ pub async fn register_user(
     }
 
     let db = state.db_conn;
-    let redis = &mut state.redis_conn.get().await.unwrap();
     let argon2 = &state.argon2;
+    let redis_result = &mut state.redis_conn.get().await;
+
+    if redis_result.is_err() {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({
+                "error": "Service unavailable"
+            })),
+        );
+    }
+
+    let redis = redis_result.as_mut().unwrap();
 
     let cached_user = services::redis::get_user(redis, payload.email.clone()).await;
 
@@ -127,7 +138,18 @@ pub async fn activate_user(
     Path(activate_code): Path<Uuid>,
 ) -> impl IntoResponse {
     let db = state.db_conn;
-    let redis = &mut state.redis_conn.get().await.unwrap();
+    let redis_result = &mut state.redis_conn.get().await;
+
+    if redis_result.is_err() {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({
+                "error": "Service unavailable"
+            })),
+        );
+    }
+
+    let redis = redis_result.as_mut().unwrap();
 
     let user_id: u32;
 
