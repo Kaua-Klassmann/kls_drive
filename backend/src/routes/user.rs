@@ -12,4 +12,5 @@ pub fn user_routes() -> Router<AppState> {
             "/activate/{activate_code}",
             get(handlers::user::activate_user),
         )
+        .route("/login", post(handlers::user::login))
 }

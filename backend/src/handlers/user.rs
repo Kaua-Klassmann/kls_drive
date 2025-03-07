@@ -1,4 +1,7 @@
-use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
+use argon2::{
+    PasswordHash, PasswordVerifier,
+    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
+};
 use axum::{
     Json,
     extract::{Path, State},
@@ -14,7 +17,7 @@ use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::{config, services, state::AppState};
+use crate::{config, jwt::JwtClaims, services, state::AppState};
 
 #[derive(Deserialize, Validate)]
 pub struct RegisterUserPayload {
@@ -223,4 +226,114 @@ pub async fn activate_user(
     }
 
     (StatusCode::OK, Json(json!({})))
+}
+
+#[derive(Deserialize, Validate)]
+pub struct LoginPayload {
+    #[validate(email)]
+    email: String,
+    #[validate(length(min = 6))]
+    password: String,
+}
+
+pub async fn login(
+    State(state): State<AppState>,
+    Json(payload): Json<LoginPayload>,
+) -> impl IntoResponse {
+    if payload.validate().is_err() {
+        return (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(json!({
+                "error": "Invalid schema"
+            })),
+        );
+    }
+
+    let db = state.db_conn;
+    let argon2 = state.argon2;
+    let redis_result = &mut state.redis_conn.get().await;
+
+    if redis_result.is_err() {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({
+                "error": "Service unavailable"
+            })),
+        );
+    }
+
+    let redis = redis_result.as_mut().unwrap();
+
+    let user: services::redis::User;
+
+    let cached_user = services::redis::get_user(redis, payload.email.clone()).await;
+
+    if cached_user.is_ok() {
+        user = cached_user.unwrap();
+    } else {
+        let user_result = user::Entity::find()
+            .filter(user::Column::Email.eq(payload.email.clone()))
+            .one(db)
+            .await;
+
+        if user_result.is_err() {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                    "error": "Failed to find user"
+                })),
+            );
+        }
+
+        let user_option = user_result.unwrap();
+
+        if user_option.is_none() {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "User not exists"
+                })),
+            );
+        }
+
+        let user_unwraped = user_option.unwrap();
+
+        user = services::redis::User {
+            user_id: user_unwraped.id,
+            password: user_unwraped.password,
+            activated: user_unwraped.activation == None,
+        };
+    }
+
+    if user.activated == false {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "error": "User is not activated"
+            })),
+        );
+    }
+
+    let parsed_hash = PasswordHash::new(&user.password).unwrap();
+
+    if argon2
+        .verify_password(payload.password.as_bytes(), &parsed_hash)
+        .is_err()
+    {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "error": "Password incorrect"
+            })),
+        );
+    }
+
+    let jwt_token = JwtClaims::new(user.user_id).gen_token();
+
+    (
+        StatusCode::OK,
+        Json(json!({
+            "token": jwt_token
+        })),
+    )
 }

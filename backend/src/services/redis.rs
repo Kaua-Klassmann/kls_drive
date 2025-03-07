@@ -3,12 +3,13 @@ use bb8_redis::{
     RedisConnectionManager,
     redis::{AsyncCommands, RedisError},
 };
+use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::config;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, FromQueryResult)]
 pub struct User {
     pub user_id: u32,
     pub password: String,
