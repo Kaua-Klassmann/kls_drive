@@ -8,6 +8,11 @@ use views::{ActivateAccount, CreateAccount, Login};
 mod components;
 mod views;
 
+#[derive(Clone)]
+pub struct AppState {
+    token: String,
+}
+
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
@@ -17,7 +22,7 @@ pub enum Route {
         #[route("/account/register")]
         CreateAccount {},
         #[route("/activate/:activate_code")]
-        ActivateAccount { activate_code: String }
+        ActivateAccount { activate_code: String },
 }
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
@@ -29,6 +34,12 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    use_context_provider(|| {
+        Signal::new(AppState {
+            token: "".to_string(),
+        })
+    });
+
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS }

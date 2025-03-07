@@ -1,11 +1,20 @@
 #login_view {
     min-height: 93dvh;
     background-color: var(--bg-secondary);
-    display: grid;
-    place-items: center;
+    
+    & #div_loading, #div_message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
 }
 
 #login_form {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: var(--bg-main);
     width: 20rem;
     border: 1px solid var(--highlight);
@@ -25,8 +34,19 @@
         padding: 0.5rem;
         color: var(--text-main);
     }
+}
 
-    & button {
-        cursor: pointer;
+#error_messages {
+    background-color: var(--warning-light);
+    padding: 1rem;
+    border-radius: 0.3rem;
+    border: 2px solid var(--warning);
+
+    & li {
+        list-style-type: none;
     }
+}
+
+.disabled {
+    cursor: not-allowed;
 }
