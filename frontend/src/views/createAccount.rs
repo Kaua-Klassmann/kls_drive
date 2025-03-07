@@ -15,7 +15,7 @@ struct RegisterUserPayload {
 pub fn CreateAccount() -> Element {
     let backend_url = env!("BACKEND_URL");
 
-    let mut messages = use_signal(|| Vec::<String>::new());
+    let mut message = use_signal(|| "".to_string());
     let mut success = use_signal(|| false);
     let mut loading = use_signal(|| false);
 
@@ -25,19 +25,17 @@ pub fn CreateAccount() -> Element {
     let submit = move |_: Event<MouseData>| async move {
         loading.set(true);
 
-        messages.set(Vec::new());
+        message.set("".to_string());
 
         if email.read().len() == 0 || !email.read().contains("@") {
             loading.set(false);
-            messages.write().push("Email is required".to_string());
+            message.set("Email is required".to_string());
             return;
         }
 
         if password.read().len() < 6 {
             loading.set(false);
-            messages
-                .write()
-                .push("Password must be at least 6 characters".to_string());
+            message.set("Password must be at least 6 characters".to_string());
             return;
         }
 
@@ -54,9 +52,7 @@ pub fn CreateAccount() -> Element {
 
         if response_result.is_err() {
             loading.set(false);
-            messages
-                .write()
-                .push("Failed to connect to server".to_string());
+            message.set("Failed to connect to server".to_string());
             return;
         }
 
@@ -64,9 +60,7 @@ pub fn CreateAccount() -> Element {
 
         if !response.status().is_success() {
             loading.set(false);
-            messages
-                .write()
-                .push("Failed to create account".to_string());
+            message.set("Failed to create account".to_string());
             return;
         }
 
@@ -99,11 +93,9 @@ pub fn CreateAccount() -> Element {
                     disabled: if success.read().to_owned() || loading.read().to_owned() { true } else { false },
                     "Create Account"
                 }
-                if messages.read().len() > 0 {
+                if message.read().len() > 0 {
                     ul { id: "error_messages",
-                        for message in messages.read().iter() {
-                            li { "{message}" }
-                        }
+                        li { "{message}" }
                     }
                 }
             }
