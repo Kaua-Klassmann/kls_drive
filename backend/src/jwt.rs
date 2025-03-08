@@ -1,3 +1,5 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use axum::{
     Json, RequestPartsExt,
     extract::FromRequestParts,
@@ -12,9 +14,9 @@ use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode}
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::config::jwt::get_jwt_opts;
+use crate::config;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct JwtClaims {
     pub user_id: u32,
     exp: usize,
@@ -22,14 +24,27 @@ pub struct JwtClaims {
 
 impl JwtClaims {
     pub fn new(user_id: u32) -> Self {
+        let expiration_time = Self::get_expiration_token();
+
         JwtClaims {
             user_id,
-            exp: usize::MAX,
+            exp: expiration_time,
         }
     }
 
+    fn get_expiration_token() -> usize {
+        let jwt_opts = config::jwt::get_jwt_opts();
+
+        let now = SystemTime::now();
+        let duration_since_epoch = now.duration_since(UNIX_EPOCH).unwrap();
+
+        let expiration_time = jwt_opts.expiration;
+
+        duration_since_epoch.as_secs() as usize + expiration_time
+    }
+
     pub fn gen_token(&self) -> String {
-        let jwt_opts = get_jwt_opts();
+        let jwt_opts = config::jwt::get_jwt_opts();
 
         let secret = jwt_opts.secret.as_bytes();
 
@@ -37,7 +52,7 @@ impl JwtClaims {
     }
 
     pub fn parse_token(token: String) -> Result<JwtClaims, impl IntoResponse> {
-        let jwt_opts = get_jwt_opts();
+        let jwt_opts = config::jwt::get_jwt_opts();
 
         let secret = jwt_opts.secret.as_bytes();
 
