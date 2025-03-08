@@ -20,6 +20,13 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Document::Name).string().not_null())
+                    .col(ColumnDef::new(Document::Type).string().not_null())
+                    .col(
+                        ColumnDef::new(Document::CreatedAt)
+                            .date()
+                            .not_null()
+                            .default(Expr::current_date()),
+                    )
                     .col(ColumnDef::new(Document::IdUser).unsigned().not_null())
                     .foreign_key(
                         ForeignKey::create()
@@ -44,5 +51,7 @@ enum Document {
     Table,
     Id,
     Name,
+    Type,
     IdUser,
+    CreatedAt,
 }
