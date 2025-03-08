@@ -1,3 +1,5 @@
+use std::fs;
+
 use argon2::{
     PasswordHash, PasswordVerifier,
     password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
@@ -224,6 +226,8 @@ pub async fn activate_user(
             .await
             .unwrap();
     }
+
+    fs::create_dir(format!("uploads/documents/{}", user_id)).unwrap();
 
     (StatusCode::OK, Json(json!({})))
 }
