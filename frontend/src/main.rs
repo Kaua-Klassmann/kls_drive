@@ -2,31 +2,19 @@
 
 use dioxus::prelude::*;
 
-use components::LoggedOutNavbar;
-use views::{ActivateAccount, CreateAccount, Login};
+use routes::Route;
 
 mod components;
+mod routes;
 mod views;
+
+const FAVICON: Asset = asset!("/assets/favicon.ico");
+const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 
 #[derive(Clone)]
 pub struct AppState {
     token: String,
 }
-
-#[derive(Debug, Clone, Routable, PartialEq)]
-#[rustfmt::skip]
-pub enum Route {
-    #[layout(LoggedOutNavbar)]
-        #[route("/")]
-        Login {},
-        #[route("/account/register")]
-        CreateAccount {},
-        #[route("/activate/:activate_code")]
-        ActivateAccount { activate_code: String },
-}
-
-const FAVICON: Asset = asset!("/assets/favicon.ico");
-const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 
 fn main() {
     dioxus::launch(App);

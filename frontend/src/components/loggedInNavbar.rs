@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::Route;
+use crate::routes::Route;
 
 const LOGGED_IN_NAVBAR_CSS: Asset = asset!("/assets/styling/components/navbars.css");
 
