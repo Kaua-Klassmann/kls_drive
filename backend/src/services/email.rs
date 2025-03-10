@@ -1,11 +1,8 @@
-use lettre::{
-    AsyncTransport, Message,
-    transport::smtp::{Error, response::Response},
-};
+use lettre::{AsyncTransport, Message, transport::smtp::Error};
 
 use crate::{config, connections};
 
-pub async fn send_email(to: String, subject: String, body: String) -> Result<Response, Error> {
+pub async fn send_email(to: String, subject: String, body: String) -> Result<(), Error> {
     let mailer_send = connections::email::get_email_mailer();
     let email_config = config::email::get_email_config();
 
@@ -16,5 +13,7 @@ pub async fn send_email(to: String, subject: String, body: String) -> Result<Res
         .body(body)
         .unwrap();
 
-    mailer_send.send(email).await
+    tokio::spawn(async { mailer_send.send(email).await });
+
+    Ok(())
 }
