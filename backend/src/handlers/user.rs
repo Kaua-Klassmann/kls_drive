@@ -113,16 +113,12 @@ pub async fn register_user(
 
     let frontend_url = config::app::get_app_config().frontend_url.clone();
 
-    let email = services::email::send_email(
+    let _ = services::email::send_email(
         payload.email.clone(),
         "Activate your account".to_string(),
         format!("{}/activate/{}", frontend_url, activation),
     )
     .await;
-
-    if email.is_err() {
-        println!("deu ruim")
-    }
 
     let user_id = user_res.unwrap().last_insert_id;
 
@@ -199,6 +195,7 @@ pub async fn activate_user(
     let user_model = user::ActiveModel {
         id: Set(user_id),
         activation: Set(None),
+        activator_generation_date: Set(None),
         ..Default::default()
     };
 

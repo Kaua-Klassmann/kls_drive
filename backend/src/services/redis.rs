@@ -52,6 +52,13 @@ pub async fn get_user(
     Ok(serde_json::from_str(resp.unwrap().as_str()).unwrap())
 }
 
+pub async fn delete_user(
+    redis: &mut PooledConnection<'_, RedisConnectionManager>,
+    email: String,
+) -> Result<(), RedisError> {
+    redis.del(format!("user:{}", email)).await
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct ActivateUser {
     pub user_id: u32,

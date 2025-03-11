@@ -20,6 +20,11 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(User::Email).string().not_null().unique_key())
                     .col(ColumnDef::new(User::Password).string().not_null())
                     .col(ColumnDef::new(User::Activation).uuid().unique_key())
+                    .col(
+                        ColumnDef::new(User::ActivatorGenerationDate)
+                            .date()
+                            .default(Expr::current_date()),
+                    )
                     .to_owned(),
             )
             .await
@@ -39,4 +44,5 @@ pub enum User {
     Email,
     Password,
     Activation,
+    ActivatorGenerationDate,
 }
