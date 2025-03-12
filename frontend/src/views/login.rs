@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     components::{Loading, MessageWithButtonLink},
-    AppState,
+    services,
 };
 
 const LOGIN_CSS: Asset = asset!("/assets/styling/views/login.css");
@@ -21,8 +21,9 @@ struct LoginResponse {
 
 #[component]
 pub fn Login() -> Element {
+    //services::auth::drop();
+
     let backend_url = env!("BACKEND_URL");
-    let mut app_state: Signal<AppState> = use_context();
 
     let mut message = use_signal(|| "".to_string());
     let mut success = use_signal(|| false);
@@ -75,7 +76,7 @@ pub fn Login() -> Element {
 
         let login_response: LoginResponse = response.json().await.unwrap();
 
-        app_state.write().token = login_response.token;
+        services::auth::create(login_response.token);
 
         loading.set(false);
         success.set(true);

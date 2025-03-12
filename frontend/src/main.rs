@@ -6,6 +6,7 @@ use routes::Route;
 
 mod components;
 mod routes;
+mod services;
 mod views;
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
