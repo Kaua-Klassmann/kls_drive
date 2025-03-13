@@ -54,8 +54,8 @@ async fn delete_all_users_with_activator_generation_date_greater_than_1_days() {
         task::spawn(async move {
             let mut redis = &mut redis_clone.get().await.unwrap();
 
-            let _ = services::redis::delete_user(&mut redis, user.email).await;
-            let _ = services::redis::del_activate_user(&mut redis, user.activation.unwrap()).await;
+            let _ = services::redis::delete_user(&mut redis, &user.email).await;
+            let _ = services::redis::del_activate_user(&mut redis, &user.activation.unwrap()).await;
         });
     }
 }

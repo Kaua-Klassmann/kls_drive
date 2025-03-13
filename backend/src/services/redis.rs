@@ -19,13 +19,13 @@ pub struct User {
 pub async fn set_user(
     redis: &mut PooledConnection<'_, RedisConnectionManager>,
     user_id: u32,
-    email: String,
-    password: String,
+    email: &String,
+    password: &String,
     activated: bool,
 ) -> Result<(), RedisError> {
     let json_data = serde_json::to_string(&User {
         user_id,
-        password,
+        password: password.to_owned(),
         activated,
     })
     .unwrap();
@@ -41,7 +41,7 @@ pub async fn set_user(
 
 pub async fn get_user(
     redis: &mut PooledConnection<'_, RedisConnectionManager>,
-    email: String,
+    email: &String,
 ) -> Result<User, RedisError> {
     let resp: Result<String, RedisError> = redis.get(format!("user:{}", email)).await;
 
@@ -54,7 +54,7 @@ pub async fn get_user(
 
 pub async fn delete_user(
     redis: &mut PooledConnection<'_, RedisConnectionManager>,
-    email: String,
+    email: &String,
 ) -> Result<(), RedisError> {
     redis.del(format!("user:{}", email)).await
 }
@@ -66,7 +66,7 @@ pub struct ActivateUser {
 
 pub async fn set_activate_user(
     redis: &mut PooledConnection<'_, RedisConnectionManager>,
-    activation_code: Uuid,
+    activation_code: &Uuid,
     user_id: u32,
 ) -> Result<(), RedisError> {
     let json_data = serde_json::to_string(&ActivateUser { user_id }).unwrap();
@@ -82,7 +82,7 @@ pub async fn set_activate_user(
 
 pub async fn get_activate_user(
     redis: &mut PooledConnection<'_, RedisConnectionManager>,
-    activate_code: Uuid,
+    activate_code: &Uuid,
 ) -> Result<ActivateUser, RedisError> {
     let resp: Result<String, RedisError> =
         redis.get(format!("activate_user:{}", activate_code)).await;
@@ -96,7 +96,7 @@ pub async fn get_activate_user(
 
 pub async fn del_activate_user(
     redis: &mut PooledConnection<'_, RedisConnectionManager>,
-    activate_code: Uuid,
+    activate_code: &Uuid,
 ) -> Result<(), RedisError> {
     redis.del(format!("activate_user:{}", activate_code)).await
 }

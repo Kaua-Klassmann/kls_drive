@@ -57,7 +57,7 @@ pub async fn register_user(
 
     let redis = redis_result.as_mut().unwrap();
 
-    let cached_user = services::redis::get_user(redis, payload.email.clone()).await;
+    let cached_user = services::redis::get_user(redis, &payload.email).await;
 
     if cached_user.is_ok() {
         return (
@@ -114,7 +114,7 @@ pub async fn register_user(
     let frontend_url = config::app::get_app_config().frontend_url.clone();
 
     let _ = services::email::send_email(
-        payload.email.clone(),
+        &payload.email,
         "Activate your account".to_string(),
         format!("{}/activate/{}", frontend_url, activation),
     )
@@ -122,9 +122,9 @@ pub async fn register_user(
 
     let user_id = user_res.unwrap().last_insert_id;
 
-    let _ = services::redis::set_activate_user(redis, activation, user_id).await;
+    let _ = services::redis::set_activate_user(redis, &activation, user_id).await;
 
-    let _ = services::redis::set_user(redis, user_id, payload.email, password_hash, false).await;
+    let _ = services::redis::set_user(redis, user_id, &payload.email, &password_hash, false).await;
 
     (StatusCode::CREATED, Json(json!({})))
 }
@@ -154,12 +154,12 @@ pub async fn activate_user(
 
     let user_id: u32;
 
-    let cached_user = services::redis::get_activate_user(redis, activate_code).await;
+    let cached_user = services::redis::get_activate_user(redis, &activate_code).await;
 
     if cached_user.is_ok() {
         user_id = cached_user.unwrap().user_id;
 
-        let _ = services::redis::del_activate_user(redis, activate_code).await;
+        let _ = services::redis::del_activate_user(redis, &activate_code).await;
     } else {
         let user_result_db = user::Entity::find()
             .select_only()
@@ -219,7 +219,7 @@ pub async fn activate_user(
         .await;
 
     if let Ok(Some(user_data)) = user_data_result {
-        services::redis::set_user(redis, user_id, user_data.email, user_data.password, true)
+        services::redis::set_user(redis, user_id, &user_data.email, &user_data.password, true)
             .await
             .unwrap();
     }
@@ -267,7 +267,7 @@ pub async fn login(
 
     let user: services::redis::User;
 
-    let cached_user = services::redis::get_user(redis, payload.email.clone()).await;
+    let cached_user = services::redis::get_user(redis, &payload.email).await;
 
     if cached_user.is_ok() {
         user = cached_user.unwrap();
