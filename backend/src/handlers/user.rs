@@ -67,7 +67,7 @@ pub async fn register_user(
     }
 
     let user_res = user::Entity::find()
-        .filter(user::Column::Email.eq(payload.email.clone()))
+        .filter(user::Column::Email.eq(&payload.email))
         .one(db)
         .await;
 
@@ -111,7 +111,7 @@ pub async fn register_user(
         );
     }
 
-    let frontend_url = config::app::get_app_config().frontend_url.clone();
+    let frontend_url = config::app::get_app_config().frontend_url;
 
     let _ = services::email::send_email(
         &payload.email,
@@ -273,7 +273,7 @@ pub async fn login(
         user = cached_user.unwrap();
     } else {
         let user_result = user::Entity::find()
-            .filter(user::Column::Email.eq(payload.email.clone()))
+            .filter(user::Column::Email.eq(&payload.email))
             .one(db)
             .await;
 
