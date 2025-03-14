@@ -5,6 +5,8 @@ use crate::components::{Loading, MessageWithButtonLink};
 
 const CREATE_ACCOUNT_CSS: Asset = asset!("/assets/styling/views/create_account.css");
 
+const BACKEND_URL: &str = env!("BACKEND_URL");
+
 #[derive(Serialize)]
 struct RegisterUserPayload {
     email: String,
@@ -13,8 +15,6 @@ struct RegisterUserPayload {
 
 #[component]
 pub fn CreateAccount() -> Element {
-    let backend_url = env!("BACKEND_URL");
-
     let mut message = use_signal(|| "".to_string());
     let mut success = use_signal(|| false);
     let mut loading = use_signal(|| false);
@@ -45,7 +45,7 @@ pub fn CreateAccount() -> Element {
         };
 
         let response_result = reqwest::Client::new()
-            .post(format!("{}/user/register", backend_url))
+            .post(format!("{}/user/register", BACKEND_URL))
             .json(&payload)
             .send()
             .await;

@@ -5,10 +5,10 @@ use crate::components::{Loading, MessageWithButtonLink};
 
 const ACTIVATE_ACCOUNT_CSS: Asset = asset!("/assets/styling/views/activate_account.css");
 
+const BACKEND_URL: &str = env!("BACKEND_URL");
+
 #[component]
 pub fn ActivateAccount(activate_code: String) -> Element {
-    let backend_url = env!("BACKEND_URL");
-
     let mut error = use_signal(|| false);
     let mut success = use_signal(|| false);
 
@@ -17,7 +17,7 @@ pub fn ActivateAccount(activate_code: String) -> Element {
 
         spawn(async move {
             let response_result = reqwest::Client::new()
-                .get(format!("{}/user/activate/{}", backend_url, activate_code))
+                .get(format!("{}/user/activate/{}", BACKEND_URL, activate_code))
                 .send()
                 .await;
 

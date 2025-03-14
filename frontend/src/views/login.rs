@@ -8,6 +8,8 @@ use crate::{
 
 const LOGIN_CSS: Asset = asset!("/assets/styling/views/login.css");
 
+const BACKEND_URL: &str = env!("BACKEND_URL");
+
 #[derive(Serialize)]
 struct LoginPayload {
     email: String,
@@ -21,8 +23,6 @@ struct LoginResponse {
 
 #[component]
 pub fn Login() -> Element {
-    let backend_url = env!("BACKEND_URL");
-
     let mut message = use_signal(|| "".to_string());
     let mut success = use_signal(|| false);
     let mut loading = use_signal(|| false);
@@ -53,7 +53,7 @@ pub fn Login() -> Element {
         };
 
         let response_result = reqwest::Client::new()
-            .post(format!("{}/user/login", backend_url))
+            .post(format!("{}/user/login", BACKEND_URL))
             .json(&payload)
             .send()
             .await;
