@@ -21,8 +21,6 @@ struct LoginResponse {
 
 #[component]
 pub fn Login() -> Element {
-    //services::auth::drop();
-
     let backend_url = env!("BACKEND_URL");
 
     let mut message = use_signal(|| "".to_string());
