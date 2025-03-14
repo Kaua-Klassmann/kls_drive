@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::{LoggedInNavbar, LoggedOutNavbar};
-use crate::views::{ActivateAccount, CreateAccount, Home, Login, NotFound};
+use crate::views::{ActivateAccount, CreateAccount, Home, Login};
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]
@@ -17,7 +17,4 @@ pub enum Route {
     #[layout(LoggedInNavbar)]
         #[route("/home")]
         Home {},
-    #[end_layout]
-    #[route("/:_route")]
-    NotFound { _route: String}
 }
