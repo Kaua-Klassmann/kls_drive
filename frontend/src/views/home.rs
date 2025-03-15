@@ -1,13 +1,12 @@
 use dioxus::prelude::*;
 
-use crate::{services, AppState};
+use crate::services;
 
 #[component]
 pub fn Home() -> Element {
     services::auth::check();
 
-    let app_state: Signal<AppState> = use_context();
-    let token = app_state.read().token.clone();
+    let token = services::auth::get();
 
     rsx! {
         div { "{token}" }
