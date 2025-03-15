@@ -1,14 +1,14 @@
 use std::fs;
 
 use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     PasswordHash, PasswordVerifier,
-    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 use axum::{
-    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
+    Json,
 };
 use entity::user;
 use sea_orm::{
@@ -306,7 +306,7 @@ pub async fn login(
         };
     }
 
-    if user.activated == false {
+    if !user.activated {
         return (
             StatusCode::BAD_REQUEST,
             Json(json!({
