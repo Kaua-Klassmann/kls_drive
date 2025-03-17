@@ -9,3 +9,6 @@ pub use loading::Loading;
 
 mod loggedInNavbar;
 pub use loggedInNavbar::LoggedInNavbar;
+
+mod documentSubmit;
+pub use documentSubmit::DocumentSubmit;

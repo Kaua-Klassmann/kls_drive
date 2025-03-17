@@ -1,0 +1,30 @@
+#home_view {
+  height: 93dvh;
+  background-color: var(--bg-secondary);
+
+  & #add_file_button {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    height: 5rem;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 3rem;
+    background-color: var(--highlight);
+    transition: transform 0.125s linear;
+    user-select: none;
+  }
+
+  & #document_submit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.clicked {
+  transform: rotate(-45deg);
+}
