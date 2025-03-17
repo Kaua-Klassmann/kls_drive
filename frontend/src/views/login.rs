@@ -103,7 +103,7 @@ pub fn Login() -> Element {
                     onclick: submit,
                     style: if success.read().to_owned() || loading.read().to_owned() { "cursor: not-allowed" } else { "cursor: pointer" },
                     disabled: if success.read().to_owned() || loading.read().to_owned() { true } else { false },
-                    "Create Account"
+                    "Login"
                 }
                 if message.read().len() > 0 {
                     ul { id: "error_messages",
