@@ -5,8 +5,12 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
+use chrono::NaiveDate;
 use entity::document;
-use sea_orm::{ActiveValue::Set, ColumnTrait, Condition, EntityTrait, QueryFilter};
+use sea_orm::{
+    ActiveValue::Set, ColumnTrait, Condition, EntityTrait, FromQueryResult, QueryFilter,
+};
+use serde::Serialize;
 use serde_json::json;
 use tokio::{fs::File, io::AsyncWriteExt};
 
@@ -100,4 +104,34 @@ pub async fn upload_document(
     file.write(&document_bytes.unwrap()).await.unwrap();
 
     (StatusCode::OK, Json(json!({})))
+}
+
+#[derive(FromQueryResult, Serialize)]
+struct DocumentResponse {
+    name: String,
+    r#type: String,
+    created_at: NaiveDate,
+}
+
+pub async fn view_documents(State(state): State<AppState>, token: JwtClaims) -> impl IntoResponse {
+    let db = state.db_conn;
+
+    let documents_result = document::Entity::find()
+        .filter(document::Column::IdUser.eq(token.user_id))
+        .into_model::<DocumentResponse>()
+        .all(db)
+        .await;
+
+    if documents_result.is_err() {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({
+                "error": "Failed to find documents"
+            })),
+        );
+    }
+
+    let documents = documents_result.unwrap();
+
+    return (StatusCode::OK, Json(json!({"documents": documents})));
 }
