@@ -1,6 +1,5 @@
 use axum::{
     Json,
-    body::Bytes,
     extract::{Multipart, State},
     http::StatusCode,
     response::IntoResponse,
@@ -25,21 +24,24 @@ pub async fn upload_document(
 
     let mut content_type: Option<String> = None;
     let mut name: Option<String> = None;
-    let mut document_bytes: Option<Bytes> = None;
+    let mut document_bytes: Vec<u8> = Vec::new();
 
-    while let Some(field) = multipart.next_field().await.unwrap() {
-        let field_name = field.name().unwrap();
+    while let Ok(Some(mut field)) = multipart.next_field().await {
+        if let Some(field_name) = field.name() {
+            if field_name == "document" {
+                if field.file_name().is_some() {
+                    content_type = Some(field.content_type().unwrap().to_string());
+                    name = Some(field.file_name().unwrap().to_string());
 
-        if field_name == "document" {
-            if field.file_name().is_some() {
-                content_type = Some(field.content_type().unwrap().to_string());
-                name = Some(field.file_name().unwrap().to_string());
-                document_bytes = Some(field.bytes().await.unwrap());
+                    while let Ok(Some(chunk)) = field.chunk().await {
+                        document_bytes.extend_from_slice(&chunk);
+                    }
+                }
             }
         }
     }
 
-    if content_type.is_none() || name.is_none() || document_bytes.is_none() {
+    if content_type.is_none() || name.is_none() || document_bytes.is_empty() {
         return (
             StatusCode::BAD_REQUEST,
             Json(json!({
@@ -101,7 +103,7 @@ pub async fn upload_document(
     .await
     .unwrap();
 
-    file.write(&document_bytes.unwrap()).await.unwrap();
+    file.write(&document_bytes).await.unwrap();
 
     (StatusCode::OK, Json(json!({})))
 }
