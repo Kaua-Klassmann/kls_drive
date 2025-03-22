@@ -1,14 +1,14 @@
 use std::fs;
 
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     PasswordHash, PasswordVerifier,
+    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use entity::user;
 use sea_orm::{
@@ -111,7 +111,7 @@ pub async fn register_user(
         );
     }
 
-    let frontend_url = config::app::get_app_config().frontend_url;
+    let frontend_url = &config::app::get_app_config().frontend_url;
 
     let _ = services::email::send_email(
         &payload.email,
