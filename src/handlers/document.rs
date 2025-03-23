@@ -8,10 +8,12 @@ use chrono::NaiveDate;
 use entity::document;
 use sea_orm::{
     ActiveValue::Set, ColumnTrait, Condition, EntityTrait, FromQueryResult, QueryFilter,
+    QuerySelect,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::{fs::File, io::AsyncWriteExt};
+use validator::Validate;
 
 use crate::{jwt::JwtClaims, state::AppState};
 
@@ -108,6 +110,14 @@ pub async fn upload_document(
     (StatusCode::OK, Json(json!({})))
 }
 
+#[derive(Deserialize, Validate)]
+pub struct ViewAllDocumentsPerPagePayload {
+    #[validate(range(min = 1))]
+    page: u64,
+    #[validate(range(min = 10, max = 50))]
+    limit: u64,
+}
+
 #[derive(FromQueryResult, Serialize)]
 struct DocumentResponse {
     name: String,
@@ -115,11 +125,32 @@ struct DocumentResponse {
     created_at: NaiveDate,
 }
 
-pub async fn view_documents(State(state): State<AppState>, token: JwtClaims) -> impl IntoResponse {
+pub async fn view_all_documents_per_page(
+    State(state): State<AppState>,
+    token: JwtClaims,
+    Json(payload): Json<ViewAllDocumentsPerPagePayload>,
+) -> impl IntoResponse {
+    if payload.validate().is_err() || !vec![10, 25, 50].contains(&payload.limit) {
+        return (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(json!({
+                "error": "Invalid payload"
+            })),
+        );
+    }
+
     let db = state.db_conn;
 
     let documents_result = document::Entity::find()
+        .select_only()
+        .columns([
+            document::Column::Name,
+            document::Column::Type,
+            document::Column::CreatedAt,
+        ])
         .filter(document::Column::IdUser.eq(token.user_id))
+        .limit(Some(payload.limit))
+        .offset(payload.limit * (payload.page - 1))
         .into_model::<DocumentResponse>()
         .all(db)
         .await;
