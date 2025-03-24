@@ -120,6 +120,7 @@ pub struct ViewAllDocumentsPerPagePayload {
 
 #[derive(FromQueryResult, Serialize)]
 struct DocumentResponse {
+    id: u32,
     name: String,
     r#type: String,
     created_at: NaiveDate,
@@ -144,6 +145,7 @@ pub async fn view_all_documents_per_page(
     let documents_result = document::Entity::find()
         .select_only()
         .columns([
+            document::Column::Id,
             document::Column::Name,
             document::Column::Type,
             document::Column::CreatedAt,
@@ -164,7 +166,8 @@ pub async fn view_all_documents_per_page(
         );
     }
 
-    let documents = documents_result.unwrap();
-
-    return (StatusCode::OK, Json(json!({"documents": documents})));
+    return (
+        StatusCode::OK,
+        Json(json!({"documents": documents_result.unwrap()})),
+    );
 }
